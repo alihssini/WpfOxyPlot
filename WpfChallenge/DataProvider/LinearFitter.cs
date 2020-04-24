@@ -19,10 +19,16 @@ namespace WpfChallenge.DataProvider
             result.A = p.Item1;
             result.B = p.Item2;
 
-            foreach (var point in points)
-                result.Points.Add(new DataPoint(point.X, (result.A * point.X) + result.B));
+            result.Points = DataPoints(points).ToList();
 
             return result;
+
+            //local function for return list of regresion Points[need to C# 8]
+            IEnumerable<DataPoint> DataPoints(List<DataPoint> points)
+            {
+                foreach (var point in points)
+                    yield return new DataPoint(point.X, (result.A * point.X) + result.B);
+            }
         }
     }
 }

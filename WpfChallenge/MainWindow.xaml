@@ -19,11 +19,14 @@
             </Grid.ColumnDefinitions>
             <Button Name="btnLoadFile" Content="Load File" Width="120" Grid.Column="0" Margin="10" Command="{Binding OpenFile}"/>
             <TextBlock Text="Fitting model:" Grid.Column="1" Margin="10"/>
-            <ComboBox Name="cmbMode" Grid.Column="2" Margin="10" SelectedIndex="0" SelectedItem="{Binding SelectedMode}">
-                <ComboBoxItem Content="Linear"/>
-                <ComboBoxItem Content="Exponential"/>
-                <ComboBoxItem Content="Power function"/>
-            </ComboBox>
+
+            <ComboBox Name="cmbMode" Grid.Column="2" Margin="10" SelectedIndex="0" 
+                      ItemsSource="{Binding Path=Modes}"
+            DisplayMemberPath="ModeTitle"
+            SelectedValuePath="ModeValue"
+            SelectedValue="{Binding SelectedMode.ModeValue}"
+            SelectedItem="{Binding SelectedMode}"/>
+
 
         </Grid>
 

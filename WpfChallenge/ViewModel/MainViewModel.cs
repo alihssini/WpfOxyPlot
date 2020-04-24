@@ -5,6 +5,11 @@ using System.Linq;
 using Microsoft.Win32;
 using WpfChallenge.Utilities;
 using System.ComponentModel;
+using System;
+using System.Windows;
+using System.Collections.Generic;
+using WpfChallenge.Model;
+using WpfChallenge.Enums;
 
 namespace WpfChallenge
 {
@@ -14,29 +19,35 @@ namespace WpfChallenge
         IPointsFileReader _fileReader;
         IFitter _fittedCurve;
         string _title = "Chalenge", _subTitle = "";
-        string _selectedMode = "Linear";
+        FitMode _selectedMode;
         #endregion
         #region Props
+        public List<FitMode> Modes { get; } = new List<FitMode>
+        {
+             new FitMode{ModeTitle= "Linear",ModeValue=Mode.Linear },
+             new FitMode{ModeTitle= "Exponential",ModeValue=Mode.Exponential },
+             new FitMode{ModeTitle= "Power function",ModeValue=Mode.PowerFunction }
+        };
         public string Title { get { return _title; } set { _title = value; OnPropertyChanged("Title"); } }
         public string SubTitle { get { return _subTitle; } set { _subTitle = value; OnPropertyChanged("SubTitle"); } }
         public PlotModel Model { get; private set; }
-       
 
-       
-    
-        public string SelectedMode
+
+
+
+        public FitMode SelectedMode
         {
             get { return _selectedMode; }
             set
             {
                 _selectedMode = value;
-
-                if (_selectedMode.Contains("Power function"))
-                    _fittedCurve = new PowerFitter();
-                else if (_selectedMode.Contains("Exponential"))
-                    _fittedCurve = new ExponentialFitter();
-                else
-                    _fittedCurve = new LinearFitter();
+                //Switch expression to handle fitter model[need to C# 8]
+                _fittedCurve = _selectedMode.ModeValue switch
+                {
+                    Mode.PowerFunction => new PowerFitter(),
+                    Mode.Exponential => new ExponentialFitter(),
+                    _ => new LinearFitter()
+                };
 
                 LoadFittedCurve();
             }
@@ -75,7 +86,7 @@ namespace WpfChallenge
         {
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.Filter = "txt files (*.txt)|*.txt|csv files (*.csv)|*.csv";
-          
+
             var show = ofd.ShowDialog();
             if (show.HasValue && show.Value)
             {
@@ -88,11 +99,19 @@ namespace WpfChallenge
         private void LoadPoints(string filePath = "")
         {
             Points.Clear();
-            foreach (var point in _fileReader.GetAllPoints(filePath))
+            try
             {
-                Points.Add(new DataPoint(
-                  point.X, point.Y));
+                foreach (var point in _fileReader.GetAllPoints(filePath))
+                {
+                    Points.Add(new DataPoint(
+                      point.X, point.Y));
+                }
             }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error");
+            }
+
         }
         private void LoadFittedCurve()
         {

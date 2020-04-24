@@ -2,8 +2,11 @@ using Moq;
 using WpfChallenge;
 using WpfChallenge.DataProvider;
 using System.Collections.Generic;
-using System.Linq;
 using Xunit;
+using System.IO;
+using System;
+using WpfChallenge.Model;
+using WpfChallenge.Enums;
 
 namespace XUnitTests
 {
@@ -11,6 +14,7 @@ namespace XUnitTests
     {
         [Theory]
         [InlineData(1.1, 1.4000000001489119, 4.4607199641933963, 18.089111453594121, 1, 1.1, 2, 2.902917404)]
+        //can put some inline data here
         public void PowerFitter(double expectedA, double expectedB, double expected1, double expected2, double x1, double y1, double x2, double y2)
         {
             var fit = new PowerFitter();
@@ -25,6 +29,7 @@ namespace XUnitTests
         }
         [Theory]
         [InlineData(0.10000000014315484, 0.20000000007477742, 0.12214027600000005, 0.14918246999999993, 1, 0.122140276, 2, 0.14918247)]
+        //can put some inline data here
         public void ExponentialFitter(double expectedA, double expectedR, double expected1, double expected2, double x1, double y1, double x2, double y2)
         {
             var fit = new ExponentialFitter();
@@ -39,6 +44,7 @@ namespace XUnitTests
         }
         [Theory]
         [InlineData(-1, 2, 1, -1, 1, 1, 3, 5)]
+        //can put some inline data here
         public void LinearFitter(double expectedA, double expectedB, double expected1, double expected2, double x1, double y1, double x2, double y2)
         {
             var fit = new LinearFitter();
@@ -52,35 +58,36 @@ namespace XUnitTests
             Assert.Equal(expected2, result.Points[1].Y);
         }
         [Fact]
-        public void PointsFileReader()
+        public void PointsFileReaderFormatException()
         {
             var reader = new PointsFileReader();
-            var data= reader.GetAllPoints(@"Data\TestData.txt");
-            Assert.Equal(3, data.Count());
-
-            Assert.Equal(2, data.ElementAt(0).X);
-            Assert.Equal(3, data.ElementAt(0).Y);
-
-            Assert.Equal(5, data.ElementAt(1).X);
-            Assert.Equal(9, data.ElementAt(1).Y);
-
-            Assert.Equal(2.5, data.ElementAt(2).X);
-            Assert.Equal(3.2, data.ElementAt(2).Y);
+            Assert.Throws<FormatException>(() => reader.GetAllPoints(@"Data\TestData.txt"));
         }
-
+        [Fact]
+        public void PointsFileReaderInvalidDataExceptionFor3Parts()
+        {
+            var reader = new PointsFileReader();
+            Assert.Throws<InvalidDataException>(() => reader.GetAllPoints(@"Data\TestData2.txt"));
+        }
+        [Fact]
+        public void PointsFileReaderFormatExceptionFor2WithSpaceParts()
+        {
+            var reader = new PointsFileReader();
+            Assert.Throws<FormatException>(() => reader.GetAllPoints(@"Data\TestData3.txt"));
+        }
         [Fact]
         public void LinearRegression()
         {
             var moq = new Mock<IPointsFileReader>();
-                moq.Setup(m => m.GetAllPoints("")).Returns(
-                new List<Point>() { 
+            moq.Setup(m => m.GetAllPoints("")).Returns(
+            new List<Point>() {
                     new Point { X = 1, Y = 1 },
-                    new Point { X =3, Y = 5 } 
-                });
-           
+                    new Point { X =3, Y = 5 }
+            });
+
             var viewModel = new MainViewModel(moq.Object);
-            
-            viewModel.SelectedMode = "Linear";
+
+            viewModel.SelectedMode = new FitMode { ModeValue = Mode.Linear };
             Assert.Equal(2, viewModel.Points.Count);
             Assert.Equal(2, viewModel.Regression.Count);
 
@@ -102,7 +109,7 @@ namespace XUnitTests
 
             var viewModel = new MainViewModel(moq.Object);
 
-            viewModel.SelectedMode = "Exponential";
+            viewModel.SelectedMode = new FitMode { ModeValue = Mode.Exponential };
             Assert.Equal(3, viewModel.Points.Count);
             Assert.Equal(3, viewModel.Regression.Count);
 
@@ -124,14 +131,14 @@ namespace XUnitTests
 
             var viewModel = new MainViewModel(moq.Object);
 
-            viewModel.SelectedMode = "Power function";
+            viewModel.SelectedMode = new FitMode{ModeValue=Mode.PowerFunction };
             Assert.Equal(2, viewModel.Points.Count);
             Assert.Equal(2, viewModel.Regression.Count);
 
             Assert.Equal("Power function", viewModel.Title);
-            
+
             Assert.Equal(4.4607199641933963, viewModel.Regression[0].Y);
-            Assert.Equal( 18.089111453594121, viewModel.Regression[1].Y);
+            Assert.Equal(18.089111453594121, viewModel.Regression[1].Y);
         }
     }
 }

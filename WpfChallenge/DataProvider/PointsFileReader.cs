@@ -17,14 +17,10 @@ namespace WpfChallenge.DataProvider
                 string line;
                 while ((line = reader.ReadLine()) != null)
                 {
-                    try
-                    {
                         var parts = line.Split(',');
-                        if (parts.Length != 2) continue;
+                    if (parts.Length != 2) throw new InvalidDataException("File contain invalid points!") ;
+
                         result.Add(new Point { X = double.Parse(parts[0]), Y = double.Parse(parts[1]) });
-                    }
-                    catch { }
-               
                 }
             }
             return result;
